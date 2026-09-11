@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Sparkles,
   X,
@@ -28,6 +28,11 @@ import {
   Terminal,
   CheckCircle2,
   Zap,
+  Waves,
+  Globe,
+  GitMerge,
+  BarChart2,
+  ArrowUpRight,
 } from "lucide-react";
 
 interface Message {
@@ -145,6 +150,7 @@ export const QuantumCopilotDrawer: React.FC<QuantumCopilotDrawerProps> = ({
   onClose,
 }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome-msg",
@@ -426,6 +432,294 @@ export const QuantumCopilotDrawer: React.FC<QuantumCopilotDrawerProps> = ({
       );
   };
 
+  // Render visual diagrams and direct interactive studio links
+  const renderVisualAttachments = (msg: Message) => {
+    const contentLower = (msg.content || "").toLowerCase();
+
+    // 1. Schrödinger Wave Mechanics / Wavepacket / Potential Barrier Tunneling
+    const isWave =
+      /schrödinger|schrodinger|wave\s*packet|potential\s*barrier|tunneling|wave\s*mechanics|double\s*slit|wave\s*function/i.test(
+        contentLower
+      );
+
+    // 2. Bloch Sphere / Single Qubit State
+    const isBloch =
+      /bloch\s*sphere|state\s*vector|superposition|qubit\s*state|\|\+\⟩|\|\-\⟩|pauli\s*[xyz]/i.test(
+        contentLower
+      );
+
+    // 3. Entanglement & Bell States
+    const isEntanglement =
+      /entangle|bell\s*state|epr\s*paradox|chsh|non-local|teleportation/i.test(
+        contentLower
+      );
+
+    // 4. Grover's Algorithm
+    const isGrover =
+      /grover|amplitude\s*amplification|oracle\s*reflection/i.test(contentLower);
+
+    // 5. Probability Chart visualization action
+    const probAction = msg.visualization_actions?.find(
+      (a: any) => a.type === "probability_chart"
+    );
+
+    return (
+      <div className="space-y-2.5 my-2.5">
+        {/* Dynamic Probability Chart Action */}
+        {probAction && probAction.payload?.probabilities && (
+          <div className="p-3 rounded-xl bg-[#0F172A] border border-cyan-900/50 text-slate-100 font-mono text-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] text-cyan-400 font-semibold flex items-center gap-1.5">
+                <BarChart2 className="w-3.5 h-3.5" />
+                State Probability Distribution
+              </span>
+              <span className="text-[10px] text-slate-400">
+                Shots: {probAction.payload.shots || 1024}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {Object.entries(probAction.payload.probabilities).map(
+                ([state, prob]: [string, any]) => {
+                  const pct = (Number(prob) * 100).toFixed(1);
+                  return (
+                    <div key={state} className="space-y-0.5">
+                      <div className="flex justify-between text-[11px]">
+                        <span className="text-cyan-300">|{state}⟩</span>
+                        <span className="text-slate-300">{pct}%</span>
+                      </div>
+                      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-cyan-500 to-blue-500 h-full rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Wave Mechanics & Schrödinger Interactive Diagram */}
+        {isWave && (
+          <div className="p-3 rounded-xl bg-gradient-to-br from-slate-950 via-[#0B132B] to-[#1C2541] border border-cyan-500/40 text-slate-100 shadow-md">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-500/40">
+                  <Waves className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-cyan-200 block">
+                    Schrödinger Wave Mechanics Lab
+                  </span>
+                  <span className="text-[10.5px] text-cyan-400/90 font-mono">
+                    iℏ ∂ψ/∂t = Ĥψ (Wavepacket & Barrier Tunneling)
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  router.push("/visualizations?tab=waves");
+                  onClose();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-medium flex items-center gap-1 transition shadow-xs cursor-pointer shrink-0"
+              >
+                <span>Launch Studio</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* SVG Wavepacket & Barrier Tunneling Diagram */}
+            <div className="relative w-full h-28 bg-slate-950/80 rounded-lg border border-cyan-900/50 overflow-hidden flex items-center justify-center">
+              <svg viewBox="0 0 400 120" className="w-full h-full">
+                <defs>
+                  <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
+                    <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.9" />
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.6" />
+                  </linearGradient>
+                  <linearGradient id="barrierGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity="0.7" />
+                    <stop offset="100%" stopColor="#f43f5e" stopOpacity="0.1" />
+                  </linearGradient>
+                </defs>
+                {/* Potential Barrier V(x) */}
+                <rect
+                  x="220"
+                  y="20"
+                  width="30"
+                  height="70"
+                  fill="url(#barrierGrad)"
+                  stroke="#f43f5e"
+                  strokeWidth="1.5"
+                  strokeDasharray="3 2"
+                />
+                <text x="235" y="15" fill="#f43f5e" fontSize="9" textAnchor="middle" fontFamily="monospace">
+                  V(x)=V₀
+                </text>
+
+                {/* Baseline */}
+                <line x1="10" y1="90" x2="390" y2="90" stroke="#334155" strokeWidth="1" />
+
+                {/* Incident wave packet */}
+                <path
+                  d="M 20,90 Q 40,30 65,90 T 115,90 T 155,90 T 185,90 Q 200,75 220,80"
+                  fill="none"
+                  stroke="url(#waveGrad)"
+                  strokeWidth="2.5"
+                />
+                {/* Tunneling exponential decay inside barrier */}
+                <path
+                  d="M 220,80 Q 235,87 250,88"
+                  fill="none"
+                  stroke="#38bdf8"
+                  strokeWidth="2"
+                  strokeDasharray="2 2"
+                />
+                {/* Transmitted wave packet */}
+                <path
+                  d="M 250,88 Q 275,76 300,88 T 350,88 T 385,88"
+                  fill="none"
+                  stroke="#06b6d4"
+                  strokeWidth="1.8"
+                  opacity="0.85"
+                />
+
+                {/* Annotations */}
+                <text x="75" y="35" fill="#38bdf8" fontSize="10" fontFamily="sans-serif" fontWeight="600">
+                  Incident Wave ψ_inc(x)
+                </text>
+                <text x="310" y="70" fill="#06b6d4" fontSize="9.5" fontFamily="sans-serif">
+                  Transmitted ψ_trans (Tunneling)
+                </text>
+              </svg>
+            </div>
+            <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+              <span>Wavepacket |ψ(x)|² probability density</span>
+              <span className="text-cyan-400">Interactive Simulation in Studio</span>
+            </div>
+          </div>
+        )}
+
+        {/* 3D Bloch Sphere Visual Card */}
+        {isBloch && !isWave && (
+          <div className="p-3 rounded-xl bg-gradient-to-br from-slate-950 via-[#0C1E3C] to-[#1E3A8A]/30 border border-blue-500/40 text-slate-100 shadow-md">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/40">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-blue-200 block">
+                    3D Bloch Sphere Studio
+                  </span>
+                  <span className="text-[10.5px] text-blue-400/90 font-mono">
+                    |ψ⟩ = cos(θ/2)|0⟩ + e^(iφ)sin(θ/2)|1⟩
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  router.push("/visualizations?tab=bloch");
+                  onClose();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-medium flex items-center gap-1 transition shadow-xs cursor-pointer shrink-0"
+              >
+                <span>Launch 3D Studio</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="relative w-full h-24 bg-slate-950/80 rounded-lg border border-blue-900/50 overflow-hidden flex items-center justify-center">
+              <svg viewBox="0 0 360 100" className="w-full h-full">
+                <circle cx="180" cy="50" r="38" fill="none" stroke="#334155" strokeWidth="1.5" />
+                <ellipse cx="180" cy="50" rx="38" ry="12" fill="none" stroke="#1e293b" strokeWidth="1" strokeDasharray="2 2" />
+                <line x1="180" y1="8" x2="180" y2="92" stroke="#3b82f6" strokeWidth="1.5" />
+                <line x1="135" y1="50" x2="225" y2="50" stroke="#64748b" strokeWidth="1" />
+                <line x1="180" y1="50" x2="204" y2="28" stroke="#38bdf8" strokeWidth="2.5" />
+                <circle cx="204" cy="28" r="3" fill="#38bdf8" />
+                <text x="180" y="14" fill="#38bdf8" fontSize="10" fontWeight="bold" textAnchor="middle">
+                  |0⟩
+                </text>
+                <text x="180" y="96" fill="#94a3b8" fontSize="10" fontWeight="bold" textAnchor="middle">
+                  |1⟩
+                </text>
+                <text x="212" y="27" fill="#38bdf8" fontSize="9" fontWeight="bold">
+                  |ψ⟩
+                </text>
+                <text x="80" y="52" fill="#60a5fa" fontSize="9">
+                  Angles: θ, φ
+                </text>
+              </svg>
+            </div>
+          </div>
+        )}
+
+        {/* Entanglement Bell States Studio Card */}
+        {isEntanglement && (
+          <div className="p-3 rounded-xl bg-gradient-to-br from-slate-950 via-[#1A0B2E] to-[#2E1065]/40 border border-purple-500/40 text-slate-100 shadow-md">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/40">
+                  <GitMerge className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-purple-200 block">
+                    Entanglement & Bell States Studio
+                  </span>
+                  <span className="text-[10.5px] text-purple-400/90 font-mono">
+                    |Φ⁺⟩ = (|00⟩ + |11⟩)/√2 (CHSH Test S = 2√2)
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  router.push("/visualizations?tab=entanglement");
+                  onClose();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-medium flex items-center gap-1 transition shadow-xs cursor-pointer shrink-0"
+              >
+                <span>Launch Studio</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Grover Algorithm Studio Card */}
+        {isGrover && (
+          <div className="p-3 rounded-xl bg-gradient-to-br from-slate-950 via-[#0B2518] to-[#064E3B]/40 border border-emerald-500/40 text-slate-100 shadow-md">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/40">
+                  <Search className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-semibold text-emerald-200 block">
+                    Grover's Algorithm Studio
+                  </span>
+                  <span className="text-[10.5px] text-emerald-400/90 font-mono">
+                    Amplitude Amplification O(√N)
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  router.push("/visualizations?tab=grover");
+                  onClose();
+                }}
+                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-medium flex items-center gap-1 transition shadow-xs cursor-pointer shrink-0"
+              >
+                <span>Launch Studio</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -616,6 +910,9 @@ export const QuantumCopilotDrawer: React.FC<QuantumCopilotDrawerProps> = ({
                   {isBot ? (
                     <div className="space-y-3">
                       {renderMessageContent(msg.content, msg.id)}
+
+                      {/* Interactive Visual Studio Card & Diagrams */}
+                      {renderVisualAttachments(msg)}
 
                       {/* Deterministic Tool Execution Badges */}
                       {msg.tool_results && msg.tool_results.length > 0 && (

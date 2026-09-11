@@ -2,6 +2,8 @@ import os
 import re
 import httpx
 from typing import List, Dict, Any, Optional
+from dotenv import load_dotenv
+load_dotenv()
 from app.services.ai.providers.base import BaseLLMProvider
 
 class GroqProvider(BaseLLMProvider):
@@ -29,7 +31,7 @@ class GroqProvider(BaseLLMProvider):
         messages: List[Dict[str, str]],
         system_prompt: str,
         temperature: float = 0.5,
-        max_tokens: int = 2048,
+        max_tokens: int = 800,
     ) -> str:
         if not self.is_available():
             raise RuntimeError("GroqProvider error: GROQ_API_KEY environment variable is not configured.")
