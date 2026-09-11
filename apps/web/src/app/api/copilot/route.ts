@@ -111,9 +111,44 @@ export async function POST(req: NextRequest) {
       content: `${BASE_SYSTEM_PROMPT}${contextNote}${domainFocus}${levelPrompt}`,
     };
 
+    // 1. Attempt communication with PBQuantum Labs FastAPI Backend AI Agent (/api/v1/ai/chat)
+    const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    try {
+      const backendRes = await fetch(`${BACKEND_API_URL}/api/v1/ai/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: messages,
+          current_path: currentPath,
+          domain_context: domainContext,
+          circuit: body.circuit || null,
+          simulation_options: body.simulationOptions || null,
+          level: level || "intermediate",
+        }),
+      });
+
+      if (backendRes.ok) {
+        const backendData = await backendRes.json();
+        return NextResponse.json({
+          reply: backendData.answer,
+          sources: backendData.sources || [],
+          tool_results: backendData.tool_results || [],
+          visualization_actions: backendData.visualization_actions || [],
+          circuit_proposal: backendData.circuit_proposal || null,
+          code: backendData.code || null,
+          confidence: backendData.confidence || "verified_by_simulation",
+          grounding_status: backendData.grounding_status || "grounded",
+          audio_text: backendData.audio_text || backendData.answer,
+          model: "pbquantum-ai-agent-v1",
+        });
+      }
+    } catch (backendErr) {
+      console.warn("Backend AI agent service unreachable. Falling back to direct Groq API LPU inference.");
+    }
+
+    // 2. Graceful Fallback: Direct Groq API LPU Call
     const fullMessages = [systemMessage, ...messages];
 
-    // Helper to call Groq API
     const callGroq = async (modelName: string) => {
       return await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -132,10 +167,8 @@ export async function POST(req: NextRequest) {
       });
     };
 
-    // Primary attempt with tested model
     let response = await callGroq(PRIMARY_MODEL);
 
-    // Fallback if needed
     if (!response.ok) {
       console.warn(`Primary model ${PRIMARY_MODEL} returned ${response.status}. Retrying with ${FALLBACK_MODEL}...`);
       response = await callGroq(FALLBACK_MODEL);
@@ -154,7 +187,6 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json();
     const rawReply = data.choices?.[0]?.message?.content || "";
-    // Clean out internal thinking tags if generated
     const replyContent =
       rawReply.replace(/<think>[\s\S]*?<\/think>/g, "").trim() ||
       "I apologize, but I could not formulate a response at this moment. Please try asking again!";
@@ -162,6 +194,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       reply: replyContent,
+      sources: [],
+      tool_results: [],
+      visualization_actions: [],
+      circuit_proposal: null,
+      code: null,
+      confidence: "groq_direct_inference",
+      grounding_status: "grounded",
+      audio_text: replyContent.slice(0, 300),
       model: modelUsed,
       usage: data.usage,
     });

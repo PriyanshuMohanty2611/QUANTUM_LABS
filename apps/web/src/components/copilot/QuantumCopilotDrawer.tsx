@@ -23,6 +23,11 @@ import {
   FlaskConical,
   ShieldAlert,
   Search,
+  Volume2,
+  VolumeX,
+  Terminal,
+  CheckCircle2,
+  Zap,
 } from "lucide-react";
 
 interface Message {
@@ -31,6 +36,13 @@ interface Message {
   content: string;
   timestamp: string;
   domain?: string;
+  sources?: any[];
+  tool_results?: any[];
+  visualization_actions?: any[];
+  circuit_proposal?: any;
+  confidence?: string;
+  grounding_status?: string;
+  audio_text?: string;
 }
 
 interface QuantumCopilotDrawerProps {
@@ -149,12 +161,52 @@ export const QuantumCopilotDrawer: React.FC<QuantumCopilotDrawerProps> = ({
   const [isWidescreen, setIsWidescreen] = useState<boolean>(false);
   const [showDomainSelector, setShowDomainSelector] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const [appliedProposalIds, setAppliedProposalIds] = useState<Record<string, boolean>>({});
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const toggleSpeak = (text: string, msgId: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    if (playingAudioId === msgId) {
+      window.speechSynthesis.cancel();
+      setPlayingAudioId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    // Clean out markdown code blocks and symbols for clean spoken audio
+    const cleanText = text
+      .replace(/```[\s\S]*?```/g, "Code block omitted.")
+      .replace(/[*#_`]/g, "")
+      .replace(/\|0\>/g, "ket zero")
+      .replace(/\|1\>/g, "ket one")
+      .replace(/\|\+>/g, "ket plus")
+      .replace(/\|\->/g, "ket minus")
+      .replace(/\|\w+\>/g, "quantum state");
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 0.95;
+    utterance.onend = () => setPlayingAudioId(null);
+    utterance.onerror = () => setPlayingAudioId(null);
+    setPlayingAudioId(msgId);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleApplyProposal = (proposal: any, msgId: string) => {
+    // Notify circuit canvas via custom DOM event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("quantum-circuit-apply-proposal", { detail: proposal })
+      );
+    }
+    setAppliedProposalIds((prev) => ({ ...prev, [msgId]: true }));
   };
 
   useEffect(() => {
@@ -216,6 +268,13 @@ export const QuantumCopilotDrawer: React.FC<QuantumCopilotDrawerProps> = ({
         role: "assistant",
         content: data.reply || "No reply generated. Please try again!",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        sources: data.sources || [],
+        tool_results: data.tool_results || [],
+        visualization_actions: data.visualization_actions || [],
+        circuit_proposal: data.circuit_proposal || null,
+        confidence: data.confidence,
+        grounding_status: data.grounding_status || "grounded",
+        audio_text: data.audio_text || data.reply,
       };
 
       setMessages((prev) => [...prev, assistantReply]);
@@ -555,7 +614,85 @@ export const QuantumCopilotDrawer: React.FC<QuantumCopilotDrawerProps> = ({
                   }`}
                 >
                   {isBot ? (
-                    renderMessageContent(msg.content, msg.id)
+                    <div className="space-y-3">
+                      {renderMessageContent(msg.content, msg.id)}
+
+                      {/* Deterministic Tool Execution Badges */}
+                      {msg.tool_results && msg.tool_results.length > 0 && (
+                        <div className="pt-2 border-t border-[#F1F5F9] space-y-1.5">
+                          <div className="text-[10px] font-mono text-[#64748B] flex items-center gap-1">
+                            <Zap className="w-3 h-3 text-amber-500" />
+                            <span className="font-semibold uppercase tracking-wider">Deterministic Quantum Tools Executed</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {msg.tool_results.map((tool: any, tIdx: number) => (
+                              <div
+                                key={tIdx}
+                                className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[#F8FAFC] border border-[#E2E8F0] text-[11px] font-mono text-[#334155]"
+                              >
+                                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                <span className="font-semibold">{tool.tool_name}</span>
+                                {tool.execution_time_ms && (
+                                  <span className="text-[#94A3B8]">({tool.execution_time_ms.toFixed(1)}ms)</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Circuit Operation Proposal Card */}
+                      {msg.circuit_proposal && (
+                        <div className="my-2 p-2.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-xs text-[#166534]">
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="font-semibold flex items-center gap-1">
+                              <Atom className="w-3.5 h-3.5 text-emerald-600" />
+                              Proposed Circuit Modification
+                            </span>
+                            <button
+                              onClick={() => handleApplyProposal(msg.circuit_proposal, msg.id)}
+                              disabled={appliedProposalIds[msg.id]}
+                              className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+                                appliedProposalIds[msg.id]
+                                  ? "bg-emerald-200 text-emerald-800 cursor-default"
+                                  : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer"
+                              }`}
+                            >
+                              {appliedProposalIds[msg.id] ? "Applied ✓" : "Apply to Canvas"}
+                            </button>
+                          </div>
+                          <div className="font-mono text-[11px] text-[#15803D]">
+                            Operation: <strong className="uppercase">{msg.circuit_proposal.operation}</strong>
+                            {msg.circuit_proposal.gate && ` [Gate: ${msg.circuit_proposal.gate.toUpperCase()}]`}
+                            {msg.circuit_proposal.targets && ` [Target Qubits: ${msg.circuit_proposal.targets.join(", ")}]`}
+                          </div>
+                          {msg.circuit_proposal.explanation && (
+                            <p className="mt-1 text-[11px] text-[#166534]">{msg.circuit_proposal.explanation}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Source Grounding Citations */}
+                      {msg.sources && msg.sources.length > 0 && (
+                        <div className="pt-2 border-t border-[#F1F5F9] space-y-1">
+                          <div className="text-[10px] font-mono text-[#64748B] flex items-center gap-1">
+                            <BookOpen className="w-3 h-3 text-[#2563EB]" />
+                            <span className="font-semibold uppercase tracking-wider">Grounding References</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {msg.sources.map((src: any, sIdx: number) => (
+                              <div
+                                key={sIdx}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#EFF6FF] border border-[#BFDBFE] text-[10.5px] text-[#1D4ED8] font-medium"
+                              >
+                                <span>{src.source_title}</span>
+                                {src.chapter && <span className="text-[#60A5FA]">({src.chapter})</span>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div>
                       {msg.domain && (
@@ -568,12 +705,43 @@ export const QuantumCopilotDrawer: React.FC<QuantumCopilotDrawerProps> = ({
                       </p>
                     </div>
                   )}
-                  <div
-                    className={`mt-1.5 text-[10px] ${
-                      isBot ? "text-[#94A3B8]" : "text-blue-100"
-                    } text-right font-mono`}
-                  >
-                    {msg.timestamp}
+
+                  {/* Message Footer with Audio Player & Timestamp */}
+                  <div className="mt-2 pt-1.5 border-t border-black/5 flex items-center justify-between text-[10.5px]">
+                    <div className="flex items-center gap-2">
+                      {isBot && (
+                        <button
+                          onClick={() => toggleSpeak(msg.audio_text || msg.content, msg.id)}
+                          className={`flex items-center gap-1 px-1.5 py-0.5 rounded transition ${
+                            playingAudioId === msg.id
+                              ? "bg-blue-100 text-blue-700 font-semibold"
+                              : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F1F5F9]"
+                          }`}
+                          title="Listen with Text-to-Speech"
+                        >
+                          {playingAudioId === msg.id ? (
+                            <>
+                              <VolumeX className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                              <span>Stop</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-3.5 h-3.5 text-[#64748B]" />
+                              <span>Listen</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {isBot && msg.grounding_status && (
+                        <span className="text-[10px] text-emerald-600 font-mono flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Grounded</span>
+                        </span>
+                      )}
+                    </div>
+                    <span className={`font-mono ${isBot ? "text-[#94A3B8]" : "text-blue-100"}`}>
+                      {msg.timestamp}
+                    </span>
                   </div>
                 </div>
 
