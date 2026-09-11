@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -39,6 +39,24 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState<boolean>(false);
+  const [scrollProgress, setScrollProgress] = useState<number>(0);
+
+  // Dynamic Scroll Progress Tracker
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        const progress = (window.scrollY / totalHeight) * 100;
+        setScrollProgress(Math.min(100, Math.max(0, progress)));
+      } else {
+        setScrollProgress(0);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [pathname]);
 
   const pathSegments = pathname ? pathname.split("/").filter(Boolean) : [];
 
@@ -48,7 +66,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       <QuantumNeuralBackground />
 
       {/* Top Professional Navigation Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-[#E2E8F0] shadow-xs">
+      <header className="sticky top-0 z-50 bg-white border-b border-[#E2E8F0] shadow-xs relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Brand Logo */}
           <div className="flex items-center gap-6">
@@ -170,6 +188,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             })}
           </div>
         )}
+
+        {/* Dynamic Glowing Blue Scroll Progress Line Dividing Navbar & Content */}
+        <div
+          className="absolute -bottom-[1px] left-0 h-[2.5px] bg-gradient-to-r from-[#2563EB] via-[#38BDF8] to-[#60A5FA] shadow-[0_0_10px_rgba(37,99,235,0.85)] transition-[width] duration-75 ease-out z-50 pointer-events-none"
+          style={{ width: `${scrollProgress}%` }}
+        />
       </header>
 
       {/* Breadcrumbs Navigation Bar */}
