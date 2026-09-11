@@ -303,3 +303,5 @@ export const CurriculumVisualsExplorer: React.FC = () => {
     </div>
   );
 };
+
+export default CurriculumVisualsExplorer;

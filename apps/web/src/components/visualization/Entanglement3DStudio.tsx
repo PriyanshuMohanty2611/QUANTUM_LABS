@@ -635,3 +635,5 @@ export const Entanglement3DStudio: React.FC = () => {
     </div>
   );
 };
+
+export default Entanglement3DStudio;

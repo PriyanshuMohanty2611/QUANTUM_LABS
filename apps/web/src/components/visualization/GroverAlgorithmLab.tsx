@@ -241,3 +241,5 @@ export const GroverAlgorithmLab: React.FC = () => {
     </div>
   );
 };
+
+export default GroverAlgorithmLab;

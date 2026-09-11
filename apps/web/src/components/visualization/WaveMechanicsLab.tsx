@@ -438,3 +438,5 @@ export const WaveMechanicsLab: React.FC = () => {
     </div>
   );
 };
+
+export default WaveMechanicsLab;

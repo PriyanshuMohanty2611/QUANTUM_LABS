@@ -247,3 +247,5 @@ export const BB84SecurityLab: React.FC = () => {
     </div>
   );
 };
+
+export default BB84SecurityLab;

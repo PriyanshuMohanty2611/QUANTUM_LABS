@@ -268,3 +268,5 @@ export const MultiQubitMatrixLab: React.FC = () => {
     </div>
   );
 };
+
+export default MultiQubitMatrixLab;

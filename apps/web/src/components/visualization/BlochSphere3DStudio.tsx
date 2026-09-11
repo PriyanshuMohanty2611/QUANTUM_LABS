@@ -853,3 +853,5 @@ export const BlochSphere3DStudio: React.FC<BlochSphere3DStudioProps> = ({
     </div>
   );
 };
+
+export default BlochSphere3DStudio;

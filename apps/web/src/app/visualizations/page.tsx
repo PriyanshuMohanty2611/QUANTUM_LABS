@@ -13,31 +13,31 @@ const LoadingVisualizer = () => (
 );
 
 const BlochSphere3DStudio = dynamic(
-  () => import("@/components/visualization/BlochSphere3DStudio").then((m) => m.BlochSphere3DStudio),
+  () => import("@/components/visualization/BlochSphere3DStudio"),
   { ssr: false, loading: LoadingVisualizer }
 );
 const Entanglement3DStudio = dynamic(
-  () => import("@/components/visualization/Entanglement3DStudio").then((m) => m.Entanglement3DStudio),
+  () => import("@/components/visualization/Entanglement3DStudio"),
   { ssr: false, loading: LoadingVisualizer }
 );
 const WaveMechanicsLab = dynamic(
-  () => import("@/components/visualization/WaveMechanicsLab").then((m) => m.WaveMechanicsLab),
+  () => import("@/components/visualization/WaveMechanicsLab"),
   { ssr: false, loading: LoadingVisualizer }
 );
 const GroverAlgorithmLab = dynamic(
-  () => import("@/components/visualization/GroverAlgorithmLab").then((m) => m.GroverAlgorithmLab),
+  () => import("@/components/visualization/GroverAlgorithmLab"),
   { ssr: false, loading: LoadingVisualizer }
 );
 const BB84SecurityLab = dynamic(
-  () => import("@/components/visualization/BB84SecurityLab").then((m) => m.BB84SecurityLab),
+  () => import("@/components/visualization/BB84SecurityLab"),
   { ssr: false, loading: LoadingVisualizer }
 );
 const MultiQubitMatrixLab = dynamic(
-  () => import("@/components/visualization/MultiQubitMatrixLab").then((m) => m.MultiQubitMatrixLab),
+  () => import("@/components/visualization/MultiQubitMatrixLab"),
   { ssr: false, loading: LoadingVisualizer }
 );
 const CurriculumVisualsExplorer = dynamic(
-  () => import("@/components/visualization/CurriculumVisualsExplorer").then((m) => m.CurriculumVisualsExplorer),
+  () => import("@/components/visualization/CurriculumVisualsExplorer"),
   { ssr: false, loading: LoadingVisualizer }
 );
 import {
